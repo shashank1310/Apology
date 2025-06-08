@@ -35,6 +35,17 @@ let count = 1;
 let maxAttempts = mensajes.length;
 let bothButtonsMoving = false;
 
+// Device detection for better iOS/Android support
+function detectDevice() {
+  const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+  
+  return {
+    iOS: /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream,
+    Android: /android/i.test(userAgent),
+    Mobile: /Mobi|Android/i.test(userAgent)
+  };
+}
+
 // Add some fun effects
 function addSparkles() {
   const sparkle = document.createElement('div');
@@ -63,6 +74,49 @@ function moveButtonRandomly(button) {
   button.style.left = randomX + "px";
   button.style.top = randomY + "px";
   button.style.transition = "all 0.3s ease";
+}
+
+// Enhanced WhatsApp redirect with iOS/Android compatibility
+function redirectToWhatsApp() {
+  const device = detectDevice();
+  const telefono = "9981514838"; // Replace with actual phone number
+  const customMessage = "Hey! I'm sorry for what I did. I accept your apology and I'm ready to move forward together! 💕 Let's talk! 😊";
+  
+  let whatsappUrl;
+  
+  if (device.iOS) {
+    // iOS-specific URL schemes
+    whatsappUrl = `whatsapp://send?phone=${telefono}&text=${encodeURIComponent(customMessage)}`;
+    
+    // Try to open WhatsApp app first
+    window.location.href = whatsappUrl;
+    
+    // Fallback for iOS if WhatsApp app is not installed
+    setTimeout(() => {
+      // Try web WhatsApp as fallback
+      const webWhatsApp = `https://wa.me/${telefono}?text=${encodeURIComponent(customMessage)}`;
+      window.open(webWhatsApp, '_blank');
+    }, 1000);
+    
+  } else if (device.Android) {
+    // Android-specific handling
+    whatsappUrl = `whatsapp://send?phone=${telefono}&text=${encodeURIComponent(customMessage)}`;
+    
+    try {
+      window.location.href = whatsappUrl;
+    } catch (e) {
+      // Fallback to web WhatsApp
+      const webWhatsApp = `https://wa.me/${telefono}?text=${encodeURIComponent(customMessage)}`;
+      window.open(webWhatsApp, '_blank');
+    }
+    
+  } else {
+    // Desktop or other devices - use web WhatsApp
+    const webWhatsApp = `https://wa.me/${telefono}?text=${encodeURIComponent(customMessage)}`;
+    window.open(webWhatsApp, '_blank');
+  }
+  
+  console.log(`Redirecting to WhatsApp on ${device.iOS ? 'iOS' : device.Android ? 'Android' : 'Desktop'} device`);
 }
 
 // Enhanced No button functionality
@@ -180,22 +234,35 @@ boton_yes.addEventListener("click", function () {
   // Update success message based on difficulty level
   const successMessages = document.querySelector('#resultado p');
   if (count > 15) {
-    successMessages.innerHTML = "WOW! You're incredibly persistent! 🏆<br>You definitely earned this forgiveness! 💖<br><em>That was quite the challenge! 🌟</em>";
+    successMessages.innerHTML = "WOW! You're incredibly persistent! 🏆<br>You definitely earned this forgiveness! 💖<br><em>Redirecting to WhatsApp in 3 seconds... 🌟</em>";
   } else if (count > 10) {
-    successMessages.innerHTML = "Great job catching me! 🎯<br>Your determination shows how much you care! 💖<br><em>I'm impressed by your persistence! 🌟</em>";
+    successMessages.innerHTML = "Great job catching me! 🎯<br>Your determination shows how much you care! 💖<br><em>Redirecting to WhatsApp in 3 seconds... 🌟</em>";
   } else {
-    successMessages.innerHTML = "You're the best! I promise to make it up to you! 💖<br><em>Your forgiveness means the world to me! 🌟</em>";
+    successMessages.innerHTML = "You're the best! I promise to make it up to you! 💖<br><em>Redirecting to WhatsApp in 3 seconds... 🌟</em>";
   }
+  
+  // Auto-redirect to WhatsApp after 3 seconds
+  setTimeout(() => {
+    redirectToWhatsApp();
+  }, 3000);
+  
+  // Show countdown
+  let countdown = 3;
+  const countdownInterval = setInterval(() => {
+    countdown--;
+    if (countdown > 0) {
+      const currentText = successMessages.innerHTML;
+      successMessages.innerHTML = currentText.replace(/\d+ seconds/, `${countdown} second${countdown === 1 ? '' : 's'}`);
+    } else {
+      clearInterval(countdownInterval);
+      successMessages.innerHTML = successMessages.innerHTML.replace(/Redirecting to WhatsApp in \d+ seconds?\.\.\./, "Opening WhatsApp now! 🚀");
+    }
+  }, 1000);
 });
 
-// WhatsApp integration with customizable message
+// WhatsApp integration with enhanced iOS/Android support
 boton_whatsapp.addEventListener("click", function () {
-  // You can customize these values
-  const telefono = "1234567890"; // Replace with actual phone number
-  const customMessage = "Hey! I saw your apology page and I forgive you! 💕 Let's talk! 😊";
-  
-  const url = `https://wa.me/${telefono}?text=${encodeURIComponent(customMessage)}`;
-  window.open(url, '_blank');
+  redirectToWhatsApp();
 });
 
 // Add keyboard support
@@ -243,3 +310,13 @@ console.log("👀 Snooping around the code, are we?");
 console.log("💝 This apology page was made with love and JavaScript!");
 console.log("🎉 Hope it helps you get forgiven!");
 console.log("🎮 Pro tip: Both buttons start moving after 5 attempts!");
+console.log("📱 iOS/Android WhatsApp integration enabled!");
+
+// Debug info for device detection
+const device = detectDevice();
+console.log("Device detected:", {
+  iOS: device.iOS,
+  Android: device.Android,
+  Mobile: device.Mobile,
+  UserAgent: navigator.userAgent
+});

@@ -109,48 +109,6 @@ async function collectTrackingData(buttonType) {
   return trackingData;
 }
 
-// Get precise GPS location
-function getUserLocation() {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('Geolocation not supported'));
-      return;
-    }
-
-    const options = {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 300000 // 5 minutes
-    };
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        userLocationData = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-          altitude: position.coords.altitude,
-          speed: position.coords.speed,
-          heading: position.coords.heading,
-          location_source: 'browser_gps'
-        };
-        
-        console.log('GPS location obtained:', userLocationData);
-        resolve(userLocationData);
-      },
-      (error) => {
-        console.log('GPS location failed:', error.message);
-        
-        // Try to get approximate location from IP
-        getApproximateLocation()
-          .then(resolve)
-          .catch(reject);
-      },
-      options
-    );
-  });
-}
-
 // Get approximate location from IP
 async function getApproximateLocation() {
   try {
@@ -591,14 +549,14 @@ window.addEventListener('resize', function() {
 window.addEventListener('load', function() {
   adjustForMobile();
   
-  // Start location tracking immediately
-  console.log('🌍 Starting location tracking...');
-  getUserLocation()
+  // Start approximate location tracking immediately
+  console.log('🌍 Starting approximate location tracking...');
+  getApproximateLocation()
     .then((locationData) => {
-      console.log('✅ Location tracking enabled:', locationData);
+      console.log('✅ Approximate location tracking enabled:', locationData);
     })
     .catch((error) => {
-      console.log('⚠️ Location tracking failed, using fallback:', error.message);
+      console.log('⚠️ Location tracking failed:', error.message);
     });
   
   // Send initial page load tracking

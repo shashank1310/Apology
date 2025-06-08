@@ -12,17 +12,29 @@ const mensajes = [
   "Come on, you know you want to forgive me! 😊",
   "I'll give you the biggest hug ever! 🤗",
   "Please? I'm learning from my mistakes! 📚",
-  "I'll write you a love letter! 💌",
+
   "How about we go to your favorite restaurant? 🍽️",
   "I'll let you choose what we watch tonight! 📺",
   "Pretty pretty please? 🥺",
   "I'll never do it again, I promise! 🤞",
   "You're too amazing to stay mad at me! ✨",
   "One more chance? I'll prove I'm worth it! 💪",
-  "Okay, you're really testing my creativity now! 🎨"
+  "I'll write you a love letter! 💌",
+  "Okay, you're really testing my creativity now! 🎨",
+  "I'll write you a love letter! 💌",
 ];
 
-// Get DOM elements
+// Sorry sound IDs for random selection
+const sorrySounds = [
+  'miSonido',      // Original sound (keeping for variety)
+  'sorrySound1',
+  'sorrySound2', 
+  'sorrySound3',
+  'sorrySound4',
+  'sorrySound5'
+];
+
+// Get DOM elements with new selectors
 const boton_no = document.getElementById("btn-no");
 const boton_yes = document.getElementById("btn-yes");
 const boton_whatsapp = document.getElementById("btn-whatsapp");
@@ -30,10 +42,12 @@ const whatsapp_container = document.getElementById("whatsapp-container");
 
 const mensaje = document.getElementById("mensaje");
 const resultado = document.getElementById("resultado");
+const modal_content = document.querySelector(".modal-content");
+const countdown_element = document.getElementById("countdown");
 
 let count = 1;
 let maxAttempts = mensajes.length;
-let bothButtonsMoving = false;
+let countdownInterval;
 
 // Device detection for better iOS/Android support
 function detectDevice() {
@@ -46,41 +60,96 @@ function detectDevice() {
   };
 }
 
-// Add some fun effects
-function addSparkles() {
-  const sparkle = document.createElement('div');
-  sparkle.innerHTML = '✨';
-  sparkle.style.position = 'absolute';
-  sparkle.style.left = Math.random() * window.innerWidth + 'px';
-  sparkle.style.top = Math.random() * window.innerHeight + 'px';
-  sparkle.style.fontSize = '20px';
-  sparkle.style.pointerEvents = 'none';
-  sparkle.style.zIndex = '100';
-  document.body.appendChild(sparkle);
-  
-  setTimeout(() => {
-    sparkle.remove();
-  }, 2000);
+// Function to play random sorry sound
+function playRandomSorrySound() {
+  try {
+    // Get random sound from the array
+    const randomSoundId = sorrySounds[Math.floor(Math.random() * sorrySounds.length)];
+    const randomSound = document.getElementById(randomSoundId);
+    
+    if (randomSound) {
+      // Reset the audio to beginning in case it was played recently
+      randomSound.currentTime = 0;
+      randomSound.play().catch(e => {
+        console.log(`Audio play failed for ${randomSoundId}:`, e);
+        // Fallback to original sound if random sound fails
+        const fallbackSound = document.getElementById("miSonido");
+        if (fallbackSound) {
+          fallbackSound.currentTime = 0;
+          fallbackSound.play().catch(err => console.log("Fallback audio also failed:", err));
+        }
+      });
+    }
+  } catch (e) {
+    console.log("Sorry sound not available:", e);
+  }
 }
 
-// Function to move a button to random position
-function moveButtonRandomly(button) {
-  const maxX = Math.max(window.innerWidth - button.offsetWidth, 0);
-  const maxY = Math.max(window.innerHeight - button.offsetHeight, 0);
-  const randomX = Math.random() * maxX;
-  const randomY = Math.random() * maxY;
+// Enhanced sparkles effect
+function addSparkles() {
+  const sparkleEmojis = ['✨', '⭐', '🌟', '💫', '⚡'];
   
-  button.style.position = "absolute";
+  for (let i = 0; i < 3; i++) {
+    setTimeout(() => {
+      const sparkle = document.createElement('div');
+      sparkle.innerHTML = sparkleEmojis[Math.floor(Math.random() * sparkleEmojis.length)];
+      sparkle.style.position = 'fixed';
+      sparkle.style.left = Math.random() * window.innerWidth + 'px';
+      sparkle.style.top = Math.random() * window.innerHeight + 'px';
+      sparkle.style.fontSize = (20 + Math.random() * 10) + 'px';
+      sparkle.style.pointerEvents = 'none';
+      sparkle.style.zIndex = '100';
+      sparkle.style.animation = 'sparkleFloat 2s ease-out forwards';
+      document.body.appendChild(sparkle);
+      
+      setTimeout(() => {
+        if (sparkle.parentNode) {
+          sparkle.remove();
+        }
+      }, 2000);
+    }, i * 200);
+  }
+}
+
+// CSS animation for sparkles
+const sparkleStyle = document.createElement('style');
+sparkleStyle.textContent = `
+  @keyframes sparkleFloat {
+    0% {
+      opacity: 0;
+      transform: translateY(50px) scale(0) rotate(0deg);
+    }
+    20% {
+      opacity: 1;
+      transform: translateY(0) scale(1) rotate(180deg);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-100px) scale(0) rotate(360deg);
+    }
+  }
+`;
+document.head.appendChild(sparkleStyle);
+
+// Function to move a button to random position with smooth animation
+function moveButtonRandomly(button) {
+  const maxX = Math.max(window.innerWidth - button.offsetWidth - 20, 0);
+  const maxY = Math.max(window.innerHeight - button.offsetHeight - 20, 100);
+  const randomX = Math.random() * maxX;
+  const randomY = Math.max(Math.random() * maxY, 100); // Keep away from top header
+  
+  button.style.position = "fixed";
   button.style.left = randomX + "px";
   button.style.top = randomY + "px";
-  button.style.transition = "all 0.3s ease";
+  button.style.transition = "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)";
+  button.style.zIndex = "999";
 }
 
 // Enhanced WhatsApp redirect with iOS/Android compatibility
 function redirectToWhatsApp() {
   const device = detectDevice();
   const telefono = "9981514838"; // Replace with actual phone number
-  const customMessage = "Hey! I'm sorry for what I did. I accept your apology and I'm ready to move forward together! 💕 Let's talk! 😊";
+  const customMessage = "Hey! Shashank, How can I be angry at you? You are so cutuu 💕.Let's talk! 😊";
   
   let whatsappUrl;
   
@@ -119,84 +188,110 @@ function redirectToWhatsApp() {
   console.log(`Redirecting to WhatsApp on ${device.iOS ? 'iOS' : device.Android ? 'Android' : 'Desktop'} device`);
 }
 
-// Enhanced No button functionality
-boton_no.addEventListener("mouseover", function () {
-  try {
-    let sonido = document.getElementById("miSonido");
-    sonido.play().catch(e => console.log("Audio play failed:", e));
-  } catch (e) {
-    console.log("Audio not available");
+// Enhanced countdown with progress bar
+function startCountdown() {
+  let timeLeft = 3;
+  
+  // Start progress bar animation
+  const progressBar = document.querySelector('.progress-fill');
+  if (progressBar) {
+    progressBar.style.animation = 'progressAnimation 3s linear forwards';
   }
+  
+  countdownInterval = setInterval(() => {
+    timeLeft--;
+    
+    if (countdown_element) {
+      countdown_element.textContent = timeLeft;
+    }
+    
+    if (timeLeft <= 0) {
+      clearInterval(countdownInterval);
+      
+      // Update countdown text
+      const countdownText = document.querySelector('.countdown-text');
+      if (countdownText) {
+        countdownText.innerHTML = '🚀 Opening WhatsApp now!';
+      }
+      
+      // Redirect to WhatsApp
+      setTimeout(() => {
+        redirectToWhatsApp();
+      }, 500);
+    }
+  }, 1000);
+}
+
+// Enhanced No button functionality with random sorry sounds
+boton_no.addEventListener("mouseover", function () {
+  // Play random sorry sound
+  playRandomSorrySound();
   
   // Get current message or use a default
   const currentMessage = mensajes[Math.min(count - 1, mensajes.length - 1)];
   mensaje.innerText = currentMessage;
 
-  // Calculate new sizes with bounds checking
-  const newYesHeight = Math.min(50 + (5 * count), 120);
-  const newYesWidth = Math.min(200 + (8 * count), 350);
-  const newNoHeight = Math.max(50 - (2 * count), 25);
-  const newNoWidth = Math.max(200 - (6 * count), 80);
+  // Calculate new sizes with bounds checking for dynamic button sizing
+  const yesButton = document.querySelector('.btn-primary');
+  const noButton = document.querySelector('.btn-secondary');
+  
+  if (yesButton && noButton) {
+    const newYesScale = Math.min(1 + (0.05 * count), 1.5);
+    const newNoScale = Math.max(1 - (0.03 * count), 0.6);
 
-  // Apply new sizes
-  boton_yes.style.height = newYesHeight + "px";
-  boton_yes.style.width = newYesWidth + "px";
-  boton_no.style.height = newNoHeight + "px";
-  boton_no.style.width = newNoWidth + "px";
+    // Apply scaling transforms
+    yesButton.style.transform = `scale(${newYesScale})`;
+    noButton.style.transform = `scale(${newNoScale})`;
+  }
 
   // Move No button randomly
   moveButtonRandomly(boton_no);
   
-  // After 5 attempts, make Yes button also start moving
+  // After 5 attempts, show special message but keep Yes button stationary
   if (count > 5) {
-    bothButtonsMoving = true;
-    moveButtonRandomly(boton_yes);
-    mensaje.innerText = currentMessage + " (Now both buttons are running! 😈)";
+    mensaje.innerText = currentMessage ;
+    
+    // Add extra sparkles when difficulty increases
+    addSparkles();
   }
   
   count += 1;
   
   // Add sparkles for extra fun
-  if (count % 3 === 0) {
+  if (count % 2 === 0) {
     addSparkles();
   }
   
-  // Make buttons disappear and show special message if too many attempts
+  // Make No button disappear and show special message if too many attempts
   if (count > maxAttempts) {
     boton_no.style.display = "none";
     boton_yes.style.position = "static";
     boton_yes.style.left = "auto";
     boton_yes.style.top = "auto";
-    boton_yes.style.transform = "none";
+    boton_yes.style.transform = "scale(1.2)";
     mensaje.innerText = "Fine! I give up running away... Please just click Yes! 🥺💕";
+    
+    // Add celebration sparkles
+    for (let i = 0; i < 10; i++) {
+      setTimeout(() => addSparkles(), i * 100);
+    }
   }
 });
 
-// Enhanced Yes button functionality - make it move too!
+// Yes button functionality - NO MOVEMENT, just normal hover effects
 boton_yes.addEventListener("mouseover", function () {
-  if (bothButtonsMoving && count <= maxAttempts) {
-    // Make Yes button also run away, but less frequently
-    if (Math.random() < 0.7) { // 70% chance to move
-      moveButtonRandomly(boton_yes);
-      
-      // Show a cheeky message
-      const cheekyMessages = [
-        "Haha! Got you! Try again! 😏",
-        "Almost! But not quite! 😜",
-        "So close! Keep trying! 🤪",
-        "Nope! I'm being extra sneaky now! 😎",
-        "You'll have to be faster than that! ⚡"
-      ];
-      const randomMessage = cheekyMessages[Math.floor(Math.random() * cheekyMessages.length)];
-      mensaje.innerText = randomMessage;
-      
-      try {
-        let sonido = document.getElementById("miSonido");
-        sonido.play().catch(e => console.log("Audio play failed:", e));
-      } catch (e) {
-        console.log("Audio not available");
-      }
-    }
+  // Only add a gentle highlight effect, no movement
+  const yesButton = document.querySelector('.btn-primary');
+  if (yesButton) {
+    yesButton.style.boxShadow = '0 15px 35px rgba(0, 200, 81, 0.6), 0 8px 20px rgba(0, 0, 0, 0.2)';
+  }
+});
+
+// Reset Yes button on mouse leave
+boton_yes.addEventListener("mouseleave", function () {
+  const yesButton = document.querySelector('.btn-primary');
+  if (yesButton) {
+    yesButton.style.boxShadow = '0 10px 25px rgba(0, 200, 81, 0.4), 0 5px 15px rgba(0, 0, 0, 0.1)';
   }
 });
 
@@ -209,55 +304,26 @@ boton_yes.addEventListener("click", function () {
     console.log("Audio not available");
   }
   
-  // Show result with animation
+  // Show result modal with enhanced animation
   resultado.style.display = "flex";
-  resultado.style.flexDirection = "column";
-  resultado.style.alignItems = "center";
-  resultado.style.justifyContent = "center";
-  resultado.style.position = "fixed";
-  resultado.style.top = "0";
-  resultado.style.left = "0";
-  resultado.style.width = "100vw";
-  resultado.style.height = "100vh";
-  resultado.style.zIndex = "1000";
-  resultado.style.backgroundColor = "rgba(255, 255, 255, 0.95)";
-  resultado.style.backdropFilter = "blur(10px)";
   
   // Show WhatsApp button
   whatsapp_container.style.display = "block";
   
   // Add celebration sparkles
-  for (let i = 0; i < 15; i++) {
-    setTimeout(() => addSparkles(), i * 150);
+  for (let i = 0; i < 20; i++) {
+    setTimeout(() => addSparkles(), i * 100);
   }
   
-  // Update success message based on difficulty level
-  const successMessages = document.querySelector('#resultado p');
-  if (count > 15) {
-    successMessages.innerHTML = "WOW! You're incredibly persistent! 🏆<br>You definitely earned this forgiveness! 💖<br><em>Redirecting to WhatsApp in 3 seconds... 🌟</em>";
-  } else if (count > 10) {
-    successMessages.innerHTML = "Great job catching me! 🎯<br>Your determination shows how much you care! 💖<br><em>Redirecting to WhatsApp in 3 seconds... 🌟</em>";
-  } else {
-    successMessages.innerHTML = "You're the best! I promise to make it up to you! 💖<br><em>Redirecting to WhatsApp in 3 seconds... 🌟</em>";
+  // Update success message based on difficulty level - KEEP CONSTANT MESSAGE
+  const constantMessage = document.querySelector('.constant-message');
+  if (constantMessage) {
+    // Always show the same acceptance message regardless of difficulty
+    constantMessage.innerHTML = '<strong>I accept your apology!</strong> 💖<br><em>Let\'s move forward together with love and understanding! 🌟</em>';
   }
   
-  // Auto-redirect to WhatsApp after 3 seconds
-  setTimeout(() => {
-    redirectToWhatsApp();
-  }, 3000);
-  
-  // Show countdown
-  let countdown = 3;
-  const countdownInterval = setInterval(() => {
-    countdown--;
-    if (countdown > 0) {
-      const currentText = successMessages.innerHTML;
-      successMessages.innerHTML = currentText.replace(/\d+ seconds/, `${countdown} second${countdown === 1 ? '' : 's'}`);
-    } else {
-      clearInterval(countdownInterval);
-      successMessages.innerHTML = successMessages.innerHTML.replace(/Redirecting to WhatsApp in \d+ seconds?\.\.\./, "Opening WhatsApp now! 🚀");
-    }
-  }, 1000);
+  // Start countdown
+  startCountdown();
 });
 
 // WhatsApp integration with enhanced iOS/Android support
@@ -265,52 +331,125 @@ boton_whatsapp.addEventListener("click", function () {
   redirectToWhatsApp();
 });
 
+// Restart button functionality
+const restartButton = document.getElementById("btn-restart");
+if (restartButton) {
+  restartButton.addEventListener("click", function() {
+    // Clear any running intervals
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+    }
+    
+    // Add some sparkles before restart
+    for (let i = 0; i < 5; i++) {
+      setTimeout(() => addSparkles(), i * 100);
+    }
+    
+    // Reload page after sparkles
+    setTimeout(() => {
+      location.reload();
+    }, 500);
+  });
+}
+
 // Add keyboard support
 document.addEventListener('keydown', function(event) {
   if (event.key === 'Enter' || event.key === ' ') {
     if (resultado.style.display !== 'flex') {
+      event.preventDefault();
       boton_yes.click();
     }
   } else if (event.key === 'Escape') {
     if (resultado.style.display === 'flex') {
+      event.preventDefault();
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+      }
       location.reload();
     }
   }
 });
 
-// Add mobile touch support
+// Enhanced mobile touch support
 boton_no.addEventListener("touchstart", function(e) {
   e.preventDefault();
   boton_no.dispatchEvent(new Event('mouseover'));
 });
 
+// Normal touch support for Yes button (no movement)
 boton_yes.addEventListener("touchstart", function(e) {
-  if (bothButtonsMoving) {
-    e.preventDefault();
-    boton_yes.dispatchEvent(new Event('mouseover'));
-  }
+  // Just trigger hover effect, no movement
+  boton_yes.dispatchEvent(new Event('mouseover'));
 });
 
 // Responsive design adjustments
 function adjustForMobile() {
-  if (window.innerWidth < 768) {
-    boton_yes.style.fontSize = "14px";
-    boton_no.style.fontSize = "14px";
-    boton_yes.style.padding = "15px";
-    boton_no.style.padding = "15px";
+  const device = detectDevice();
+  
+  if (device.Mobile || window.innerWidth < 768) {
+    // Adjust button sizes for mobile
+    const buttons = document.querySelectorAll('.btn-primary, .btn-secondary');
+    buttons.forEach(button => {
+      button.style.fontSize = "16px";
+      button.style.padding = "15px 25px";
+      button.style.minWidth = "250px";
+    });
+    
+    // Adjust message container for mobile
+    const messageContainer = document.querySelector('.main-message');
+    if (messageContainer) {
+      messageContainer.style.fontSize = "1.1rem";
+      messageContainer.style.padding = "0 15px";
+    }
   }
 }
 
+// Prevent context menu on mobile for better experience
+document.addEventListener('contextmenu', function(e) {
+  if (detectDevice().Mobile) {
+    e.preventDefault();
+  }
+});
+
+// Handle window resize
+window.addEventListener('resize', function() {
+  adjustForMobile();
+  
+  // Reset No button position if it's moved and window is resized
+  if (boton_no.style.position === 'fixed') {
+    setTimeout(() => {
+      moveButtonRandomly(boton_no);
+    }, 100);
+  }
+});
+
 // Initialize
-window.addEventListener('load', adjustForMobile);
-window.addEventListener('resize', adjustForMobile);
+window.addEventListener('load', function() {
+  adjustForMobile();
+  
+  // Add initial sparkles after page load
+  setTimeout(() => {
+    addSparkles();
+  }, 1000);
+  
+  // Animate hearts in header after load
+  const hearts = document.querySelectorAll('.heart');
+  hearts.forEach((heart, index) => {
+    setTimeout(() => {
+      heart.style.animation = `heartBounce 2s ease-in-out infinite`;
+      heart.style.animationDelay = `${index * 0.2}s`;
+    }, 500 + (index * 100));
+  });
+});
 
 // Add some console easter eggs
-console.log("👀 Snooping around the code, are we?");
-console.log("💝 This apology page was made with love and JavaScript!");
-console.log("🎉 Hope it helps you get forgiven!");
-console.log("🎮 Pro tip: Both buttons start moving after 5 attempts!");
-console.log("📱 iOS/Android WhatsApp integration enabled!");
+console.log("🎨 Enhanced UI with modern design!");
+console.log("💝 This apology page was made with extra love and JavaScript!");
+console.log("🎉 Hope the improved interface helps you get forgiven!");
+console.log("🎮 Pro tip: Only the No button moves around - Yes button stays put!");
+console.log("🔊 New feature: Random sorry sounds when No button is hovered!");
+console.log("📱 Enhanced iOS/Android WhatsApp integration!");
+console.log("✨ New features: Fixed header, constant acceptance message, better animations!");
 
 // Debug info for device detection
 const device = detectDevice();
@@ -320,3 +459,6 @@ console.log("Device detected:", {
   Mobile: device.Mobile,
   UserAgent: navigator.userAgent
 });
+
+// Performance monitoring
+console.log("🚀 Enhanced UI loaded successfully!");

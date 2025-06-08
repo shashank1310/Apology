@@ -4,36 +4,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>sowwyy yiyii</title>
+    <meta name="description" content="A heartfelt apology page with interactive elements to express sincere apologies">
+    <meta name="keywords" content="apology, forgiveness, interactive, fun, relationship">
+    <meta name="author" content="obed-tc">
+    <title>Heartfelt Apology - Please Forgive Me</title>
     <link rel="icon" type="image/png" href="./assets/icono.png">
     <link rel="stylesheet" type="text/css" href="./styles.css">
 </head>
 
 <body>
     <div class="header">
-        <img src="./assets/gif-fun.gif" width="200px" />
-        <h1>Forgive me, plsss!</h1>
-        <p id="mensaje"></p>
+        <img src="./assets/gif-fun.gif" alt="Cute apology animation" width="200px" />
+        <h1>🥺 Please Forgive Me! 🥺</h1>
+        <p id="mensaje">I'm really sorry... Will you forgive me?</p>
     </div>
 
     <div class="container-btn">
-        <button id="btn-yes">Yeaa</button>
-        <button id="btn-no">Nope</button>
+        <button id="btn-yes">Yes, I forgive you! 💕</button>
+        <button id="btn-no">No way! 😤</button>
     </div>
 
-    <audio id="miSonido">
-        <source src="./assets/boom.mp3" type=" audio/mpeg">
-        apoloqy
+    <!-- WhatsApp Button -->
+    <div class="whatsapp-container" id="whatsapp-container" style="display: none;">
+        <button id="btn-whatsapp">
+            <img src="./assets/whatsapp-icon.png" alt="WhatsApp" width="20px" />
+            Send Message 💬
+        </button>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="miSonido" preload="auto">
+        <source src="./assets/boom.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
     </audio>
-    <audio id="miSonido2">
-        <source src="./assets/sound-result.mp3" type=" audio/mpeg">
-        apoloqy
+    <audio id="miSonido2" preload="auto">
+        <source src="./assets/sound-result.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
     </audio>
+
+    <!-- Success Result -->
     <div id="resultado">
-        <img src="./assets/dubu.gif" width="250px" />
+        <img src="./assets/dubu.gif" alt="Happy celebration" width="250px" />
+        <h2>🎉 Thank You So Much! 🎉</h2>
         <p>
-            hehe thank uu meow, wleerkk :3
+            You're the best! I promise to make it up to you! 💖<br>
+            <em>Your forgiveness means the world to me! 🌟</em>
         </p>
+        <div class="result-buttons">
+            <button id="btn-restart" onclick="location.reload()">Start Over 🔄</button>
+        </div>
     </div>
 
     <script src="./script.js"></script>
